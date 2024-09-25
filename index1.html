@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>اختبار سرعة الفأرة</title>
+    <style>
+        body {
+            position: relative;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-color: black; /* خلفية سوداء */
+            text-align: center;
+            user-select: none; /* تعطيل تحديد النص */
+            cursor: none; /* إخفاء مؤشر الفأرة الافتراضي */
+        }
+        #ball {
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .shatter {
+            animation: shatter 0.5s forwards; /* تأثير التحطم */
+            pointer-events: none;
+        }
+        @keyframes shatter {
+            to {
+                opacity: 0;
+                transform: scale(2) rotate(720deg);
+            }
+        }
+        #score, #timer {
+            position: absolute;
+            top: 10px;
+            font-size: 24px;
+            color: white; /* لون النص أبيض */
+            user-select: none; /* تعطيل تحديد النص */
+        }
+        #score {
+            left: 10px;
+        }
+        #timer {
+            right: 10px;
+        }
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            user-select: none; /* تعطيل تحديد النص */
+        }
+        #game-over h1 {
+            margin: 0 0 20px 0;
+        }
+        #restart-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .cursor-trail {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: trail 0.5s forwards;
+        }
+        @keyframes trail {
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(2);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="score">النقاط: 0</div>
+<div id="timer">الوقت: 20</div>
+<div id="ball"></div>
+
+<div id="game-over">
+    <h1>انتهت اللعبة!</h1>
+    <p>نقاطك: <span id="final-score"></span></p>
+    <button id="restart-btn">إعادة البدء</button>
+</div>
+
+<script>
+    let score = 0;
+    let timeLeft = 20;
+    const ball = document.getElementById('ball');
+    const scoreDisplay = document.getElementById('score');
+    const timerDisplay = document.getElementById('timer');
+    const gameOverDiv = document.getElementById('game-over');
+    const finalScore = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function moveBall() {
+        const maxWidth = window.innerWidth - 50;
+        const maxHeight = window.innerHeight - 50;
+        const randomX = Math.floor(Math.random() * maxWidth);
+        const randomY = Math.floor(Math.random() * maxHeight);
+        ball.style.left = randomX + 'px';
+        ball.style.top = randomY + 'px';
+    }
+
+    // إضافة الصوت
+    const clickSound = new Audio('click.mp3'); // تأكد من وجود ملف الصوت في نفس المجلد
+
+    ball.addEventListener('click', (e) => {
+        // زيادة النقاط وتحديث العرض
+        score++;
+        scoreDisplay.textContent = 'النقاط: ' + score;
+
+        // تشغيل الصوت
+        clickSound.currentTime = 0;
+        clickSound.play();
+
+        // إنشاء نسخة من الكرة لتطبيق تأثير التحطم
+        const shatterBall = ball.cloneNode();
+        shatterBall.style.left = ball.style.left;
+        shatterBall.style.top = ball.style.top;
+        shatterBall.classList.add('shatter');
+        document.body.appendChild(shatterBall);
+
+        // إزالة الكرة المتحطمة بعد انتهاء التأثير
+        setTimeout(() => {
+            shatterBall.remove();
+        }, 500); // مدة تأثير التحطم
+
+        // تحريك الكرة الأصلية فورًا إلى موقع جديد
+        moveBall();
+    });
+
+    function countdown() {
+        timeLeft--;
+        timerDisplay.textContent = 'الوقت: ' + timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            ball.style.display = 'none';
+            showGameOver();
+        }
+    }
+
+    function showGameOver() {
+        finalScore.textContent = score;
+        gameOverDiv.style.display = 'block';
+    }
+
+    restartBtn.addEventListener('click', () => {
+        location.reload();
+    });
+
+    moveBall();
+    const timer = setInterval(countdown, 1000);
+
+    // تأثير حركة السهم
+    document.addEventListener('mousemove', function(e) {
+        const trail = document.createElement('div');
+        trail.className = 'cursor-trail';
+        trail.style.left = e.pageX + 'px';
+        trail.style.top = e.pageY + 'px';
+        document.body.appendChild(trail);
+
+        // إزالة العنصر بعد انتهاء التأثير
+        setTimeout(() => {
+            trail.remove();
+        }, 500);
+    });
+</script>
+
+</body>
+</html>
